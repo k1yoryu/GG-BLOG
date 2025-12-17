@@ -42,14 +42,11 @@ async def home(
         db: Session = Depends(get_db)
 ):
     try:
-        # Общее количество постов
         total_posts = db.query(models.Post).count()
 
-        # Расчет пагинации
         skip = (page - 1) * per_page
         total_pages = (total_posts + per_page - 1) // per_page
 
-        # Получаем посты для текущей страницы
         posts = db.query(models.Post) \
             .order_by(models.Post.created_at.desc()) \
             .offset(skip) \
@@ -79,3 +76,47 @@ async def home(
 @app.get("/health")
 async def health_check():
     return {"status": "ok"}
+
+
+@app.get("/search", response_class=HTMLResponse)
+async def search_posts(
+        request: Request,
+        q: str = Query("", max_length=100),
+        page: int = Query(1, ge=1),
+        per_page: int = Query(10, ge=1, le=50),
+        db: Session = Depends(get_db)
+):
+    try:
+
+        skip = (page - 1) * per_page
+        posts = db.query(models.Post) \
+            .filter(models.Post.title.ilike(f"%{q}%") |
+                    models.Post.content.ilike(f"%{q}%")) \
+            .order_by(models.Post.created_at.desc()) \
+            .offset(skip) \
+            .limit(per_page) \
+            .all()
+
+        total_results = db.query(models.Post) \
+            .filter(models.Post.title.ilike(f"%{q}%") |
+                    models.Post.content.ilike(f"%{q}%")) \
+            .count()
+
+        total_pages = (total_results + per_page - 1) // per_page
+    except:
+        posts = []
+        total_results = 0
+        total_pages = 1
+
+    return templates.TemplateResponse(
+        "search.html",
+        {
+            "request": request,
+            "posts": posts,
+            "query": q,
+            "total_results": total_results,
+            "page": page,
+            "total_pages": total_pages,
+            "per_page": per_page
+        }
+    )
