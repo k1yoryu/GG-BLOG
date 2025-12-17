@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
 
@@ -38,6 +39,11 @@ class PostCreate(PostBase):
     pass
 
 
+class PostUpdate(BaseModel):
+    title: Optional[str] = Field(None, min_length=1, max_length=200)
+    content: Optional[str] = Field(None, min_length=1)
+
+
 class PostOut(PostBase):
     id: int
     author_id: int
@@ -45,3 +51,7 @@ class PostOut(PostBase):
 
     class Config:
         from_attributes = True
+
+
+class PostWithAuthor(PostOut):
+    author: UserOut

@@ -16,7 +16,7 @@ def read_posts(
     posts = crud.get_posts(db, skip=skip, limit=limit)
     return posts
 
-@router.post("/", response_model=schemas.Post)
+@router.post("/", response_model=schemas.PostOut)  # Изменил здесь
 def create_post(
     post: schemas.PostCreate,
     db: Session = Depends(get_db),
@@ -31,7 +31,7 @@ def read_post(post_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Post not found")
     return db_post
 
-@router.put("/{post_id}", response_model=schemas.Post)
+@router.put("/{post_id}", response_model=schemas.PostOut)  # Изменил здесь
 def update_post(
     post_id: int,
     post_update: schemas.PostUpdate,
