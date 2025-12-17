@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ post.title }} - GG-BLOG{% endblock %}
+{% block title %}{{ post.title }} - GG Blog{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -18,11 +18,36 @@
                 <div class="post-content">
                     {{ post.content|safe }}
                 </div>
+
+                {% if request.cookies.get('access_token') %}
+                    {% set user_id = None %}
+                    {% if current_user %}
+                        {% set user_id = current_user.id %}
+                    {% endif %}
+
+                    {% if post.author_id == user_id %}
+                    <div class="mt-4">
+                        <div class="btn-group">
+                            <a href="/posts/{{ post.id }}/edit" class="btn btn-warning">
+                                <i class="bi bi-pencil"></i> Редактировать
+                            </a>
+                            <form method="post" action="/posts/{{ post.id }}/delete" class="d-inline">
+                                <button type="submit" class="btn btn-danger ms-2"
+                                        onclick="return confirm('Удалить пост?')">
+                                    <i class="bi bi-trash"></i> Удалить
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endif %}
             </div>
         </article>
 
         <div class="mt-4">
-            <a href="/" class="btn btn-secondary">Назад к списку</a>
+            <a href="/" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Назад к списку
+            </a>
         </div>
     </div>
 </div>
