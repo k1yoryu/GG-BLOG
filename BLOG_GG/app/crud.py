@@ -75,3 +75,18 @@ def delete_post(db: Session, post_id: int, user_id: int):
         return True
 
     return False
+
+def search_posts(db: Session, search_query: str, skip: int = 0, limit: int = 10):
+    return db.query(models.Post)\
+        .filter(models.Post.title.ilike(f"%{search_query}%") |
+                models.Post.content.ilike(f"%{search_query}%"))\
+        .order_by(models.Post.created_at.desc())\
+        .offset(skip)\
+        .limit(limit)\
+        .all()
+
+def count_search_posts(db: Session, search_query: str):
+    return db.query(models.Post)\
+        .filter(models.Post.title.ilike(f"%{search_query}%") |
+                models.Post.content.ilike(f"%{search_query}%"))\
+        .count()
