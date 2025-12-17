@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import FastAPI, Request, Depends, Query
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -11,7 +12,6 @@ import time
 app = FastAPI(title="GG-BLOG")
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
-
 templates = Jinja2Templates(directory="app/templates")
 
 @app.on_event("startup")
@@ -20,44 +20,44 @@ def startup():
     for i in range(max_retries):
         try:
             models.Base.metadata.create_all(bind=engine)
-            print("Таблицы созданы успешно")
             break
         except Exception as e:
             if i < max_retries - 1:
-                print(f" Попытка {i + 1}/{max_retries}: Ждем подключения к БД...")
                 time.sleep(3)
-            else:
-                print(f" Не удалось подключиться к БД: {e}")
-
 
 app.include_router(auth.router)
 app.include_router(posts.router)
 
+def get_current_user_optional(request: Request, db: Session = Depends(get_db)):
+    token = request.cookies.get("access_token")
+    if not token or not token.startswith("Bearer "):
+        return None
+    token = token[7:]
+    from app.auth import verify_token
+    username = verify_token(token)
+    if not username:
+        return None
+    from app.crud import get_user_by_username
+    return get_user_by_username(db, username)
 
 @app.get("/", response_class=HTMLResponse)
 async def home(
-        request: Request,
-        page: int = Query(1, ge=1),
-        per_page: int = Query(10, ge=1, le=50),
-        db: Session = Depends(get_db)
+    request: Request,
+    page: int = Query(1, ge=1),
+    per_page: int = Query(10, ge=1, le=50),
+    db: Session = Depends(get_db),
+    current_user: Optional[models.User] = Depends(get_current_user_optional)
 ):
     try:
         total_posts = db.query(models.Post).count()
-
         skip = (page - 1) * per_page
         total_pages = (total_posts + per_page - 1) // per_page
-
-        posts = db.query(models.Post) \
-            .order_by(models.Post.created_at.desc()) \
-            .offset(skip) \
-            .limit(per_page) \
-            .all()
-
+        posts_list = db.query(models.Post).order_by(models.Post.created_at.desc()).offset(skip).limit(per_page).all()
         user_count = db.query(models.User).count()
     except:
         total_posts = 0
         total_pages = 1
-        posts = []
+        posts_list = []
         user_count = 0
 
     return templates.TemplateResponse(
@@ -66,30 +66,28 @@ async def home(
             "request": request,
             "post_count": total_posts,
             "user_count": user_count,
-            "posts": posts,
+            "posts": posts_list,
             "page": page,
             "total_pages": total_pages,
-            "per_page": per_page
+            "per_page": per_page,
+            "current_user": current_user
         }
     )
 
-@app.get("/health")
-async def health_check():
-    return {"status": "ok"}
-
 
 @app.get("/search", response_class=HTMLResponse)
-async def search_posts(
+async def search(
         request: Request,
         q: str = Query("", max_length=100),
         page: int = Query(1, ge=1),
         per_page: int = Query(10, ge=1, le=50),
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
+        current_user: Optional[models.User] = Depends(get_current_user_optional)
 ):
     try:
-
         skip = (page - 1) * per_page
-        posts = db.query(models.Post) \
+
+        posts_list = db.query(models.Post) \
             .filter(models.Post.title.ilike(f"%{q}%") |
                     models.Post.content.ilike(f"%{q}%")) \
             .order_by(models.Post.created_at.desc()) \
@@ -104,7 +102,7 @@ async def search_posts(
 
         total_pages = (total_results + per_page - 1) // per_page
     except:
-        posts = []
+        posts_list = []
         total_results = 0
         total_pages = 1
 
@@ -112,11 +110,17 @@ async def search_posts(
         "search.html",
         {
             "request": request,
-            "posts": posts,
+            "posts": posts_list,
             "query": q,
             "total_results": total_results,
             "page": page,
             "total_pages": total_pages,
-            "per_page": per_page
+            "per_page": per_page,
+            "current_user": current_user
         }
     )
+
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
