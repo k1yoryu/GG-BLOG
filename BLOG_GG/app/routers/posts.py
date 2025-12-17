@@ -1,11 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request, Form
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from typing import List
 from app import schemas, crud, models
 from app.dependencies import get_db, get_current_user
 from app.auth import verify_token
+from app.models import User
 
 router = APIRouter(prefix="/posts", tags=["posts"])
+templates = Jinja2Templates(directory="app/templates")
 
 @router.get("/", response_model=List[schemas.PostWithAuthor])
 def read_posts(
@@ -53,3 +57,52 @@ def delete_post(
     if not success:
         raise HTTPException(status_code=404, detail="Post not found or not authorized")
     return {"message": "Post deleted successfully"}
+
+@router.get("/posts/{post_id}/edit", response_class=HTMLResponse)
+async def edit_post_page(
+        post_id: int,
+        request: Request,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user)
+):
+    post = crud.get_post(db, post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Пост не найден")
+    if post.author_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Недостаточно прав")
+
+    return templates.TemplateResponse("edit_post.html", {
+        "request": request,
+        "post": post
+    })
+
+
+@router.post("/posts/{post_id}/edit", response_class=HTMLResponse)
+async def edit_post(
+        post_id: int,
+        request: Request,
+        title: str = Form(...),
+        content: str = Form(...),
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user)
+):
+    post_update = schemas.PostUpdate(title=title, content=content)
+    db_post = crud.update_post(db, post_id, post_update, current_user.id)
+    if not db_post:
+        raise HTTPException(status_code=404, detail="Пост не найден или недостаточно прав")
+
+    return RedirectResponse(url=f"/posts/{post_id}", status_code=status.HTTP_302_FOUND)
+
+
+@router.post("/posts/{post_id}/delete", response_class=HTMLResponse)
+async def delete_post_handler(
+        post_id: int,
+        request: Request,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user)
+):
+    success = crud.delete_post(db, post_id, current_user.id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Пост не найден или недостаточно прав")
+
+    return RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
