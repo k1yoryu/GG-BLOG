@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Создать пост - Mini Blog{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h2 class="mb-4">Создать новый пост</h2>
+
+        <form method="post" action="/posts/create">
+            <div class="mb-3">
+                <label for="title" class="form-label">Заголовок</label>
+                <input type="text" class="form-control" id="title" name="title" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="content" class="form-label">Содержание</label>
+                <textarea class="form-control" id="content" name="content" rows="10" required></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Опубликовать</button>
+            <a href="/" class="btn btn-secondary">Отмена</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
