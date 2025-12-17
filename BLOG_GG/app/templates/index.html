@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Главная - Mini Blog{% endblock %}
+
+{% block content %}
+    <h1>Добро пожаловать в Mini Blog!</h1>
+    <p class="lead">Это мини-блог на FastAPI с Bootstrap 5</p>
+    <div class="alert alert-success">
+        <strong>Сервер работает!</strong> Вы можете начать разработку.
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Проверка работы API</h5>
+            <p class="card-text">Перейдите по ссылке для проверки здоровья приложения:</p>
+            <a href="/health" class="btn btn-primary">/health endpoint</a>
+            <a href="/docs" class="btn btn-info">Swagger Docs</a>
+            <a href="/redoc" class="btn btn-secondary">ReDoc</a>
+        </div>
+    </div>
+{% endblock %}
