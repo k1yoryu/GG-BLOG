@@ -116,3 +116,35 @@ async def edit_post_page(
         "request": request,
         "post": post
     })
+
+
+@router.post("/posts/{post_id}/edit", response_class=HTMLResponse)
+async def edit_post(
+        post_id: int,
+        request: Request,
+        title: str = Form(...),
+        content: str = Form(...),
+        db: Session = Depends(get_db),
+        current_user: models.User = Depends(get_current_user)
+):
+    post_update = schemas.PostUpdate(title=title, content=content)
+    db_post = crud.update_post(db, post_id, post_update, current_user.id)
+    if not db_post:
+        raise HTTPException(status_code=404, detail="Пост не найден или недостаточно прав")
+
+    return RedirectResponse(url=f"/posts/{post_id}", status_code=status.HTTP_302_FOUND)
+
+
+@router.post("/posts/{post_id}/delete", response_class=HTMLResponse)
+async def delete_post_handler(
+        post_id: int,
+        request: Request,
+        db: Session = Depends(get_db),
+        current_user: models.User = Depends(get_current_user)
+):
+    success = crud.delete_post(db, post_id, current_user.id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Пост не найден или недостаточно прав")
+
+    return RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
+
