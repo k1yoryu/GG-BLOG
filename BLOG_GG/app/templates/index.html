@@ -3,18 +3,94 @@
 {% block title %}Главная - Mini Blog{% endblock %}
 
 {% block content %}
-    <h1>Добро пожаловать в Mini Blog!</h1>
-    <p class="lead">Это мини-блог на FastAPI с Bootstrap 5</p>
-    <div class="alert alert-success">
-        <strong>Сервер работает!</strong> Вы можете начать разработку.
+<div class="row">
+    <div class="col-md-8">
+        <h1 class="mb-4">Последние посты</h1>
+
+        {% if posts %}
+            {% for post in posts %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <a href="/posts/{{ post.id }}" class="text-decoration-none">{{ post.title }}</a>
+                    </h5>
+                    <p class="card-text">{{ post.content[:200] }}{% if post.content|length > 200 %}...{% endif %}</p>
+                    <p class="card-text">
+                        <small class="text-muted">
+                            Опубликовано: {{ post.created_at.strftime('%d.%m.%Y %H:%M') }}
+                        </small>
+                    </p>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-info">
+                Пока нет ни одного поста. <a href="/posts/create" class="alert-link">Создайте первый!</a>
+            </div>
+        {% endif %}
     </div>
-    <div class="card">
-        <div class="card-body">
-            <h5 class="card-title">Проверка работы API</h5>
-            <p class="card-text">Перейдите по ссылке для проверки здоровья приложения:</p>
-            <a href="/health" class="btn btn-primary">/health endpoint</a>
-            <a href="/docs" class="btn btn-info">Swagger Docs</a>
-            <a href="/redoc" class="btn btn-secondary">ReDoc</a>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Статистика</h5>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Постов:</span>
+                        <span class="badge bg-primary rounded-pill">{{ post_count }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Пользователей:</span>
+                        <span class="badge bg-primary rounded-pill">{{ user_count }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-body">
+                <h5 class="card-title">Действия</h5>
+                <div class="d-grid gap-2">
+                    <a href="/posts/create" class="btn btn-primary">Создать пост</a>
+                    <a href="/register" class="btn btn-outline-primary">Регистрация</a>
+                    <a href="/login" class="btn btn-outline-secondary">Вход</a>
+                </div>
+            </div>
         </div>
     </div>
+</div>
+
+{% if total_pages > 1 %}
+<nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page > 1 %}
+        <li class="page-item">
+            <a class="page-link" href="/?page={{ page-1 }}&per_page={{ per_page }}">Назад</a>
+        </li>
+        {% endif %}
+
+        {% for p in range(1, total_pages + 1) %}
+            {% if p == page %}
+            <li class="page-item active">
+                <span class="page-link">{{ p }}</span>
+            </li>
+            {% else %}
+            <li class="page-item">
+                <a class="page-link" href="/?page={{ p }}&per_page={{ per_page }}">{{ p }}</a>
+            </li>
+            {% endif %}
+        {% endfor %}
+
+        {% if page < total_pages %}
+        <li class="page-item">
+            <a class="page-link" href="/?page={{ page+1 }}&per_page={{ per_page }}">Вперед</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+
+
+
 {% endblock %}
