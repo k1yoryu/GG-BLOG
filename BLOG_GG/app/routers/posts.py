@@ -4,7 +4,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app import schemas, crud, models
-from app.dependencies import get_db, get_current_user
+from app.dependencies import get_db, get_current_user, get_current_user_optional
 
 router = APIRouter(prefix="", tags=["posts"])
 templates = Jinja2Templates(directory="app/templates")
@@ -88,7 +88,7 @@ async def read_post(
         post_id: int,
         request: Request,
         db: Session = Depends(get_db),
-        current_user: Optional[models.User] = Depends(get_current_user)
+        current_user: Optional[models.User] = Depends(get_current_user_optional)
 ):
     post = crud.get_post(db, post_id)
     if not post:
@@ -147,4 +147,3 @@ async def delete_post_handler(
         raise HTTPException(status_code=404, detail="Пост не найден или недостаточно прав")
 
     return RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
-
