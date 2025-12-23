@@ -7,7 +7,7 @@
     <div class="col-md-8">
         <h2 class="mb-4">Создать новый пост</h2>
 
-        <form method="post" action="/posts/create">
+        <form method="post" action="/posts/create" enctype="multipart/form-data">
             <div class="mb-3">
                 <label for="title" class="form-label">Заголовок</label>
                 <input type="text" class="form-control" id="title" name="title" required>
@@ -16,6 +16,12 @@
             <div class="mb-3">
                 <label for="content" class="form-label">Содержание</label>
                 <textarea class="form-control" id="content" name="content" rows="10" required></textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="image" class="form-label">Изображение (опционально)</label>
+                <input type="file" class="form-control" id="image" name="image" accept=".jpg,.jpeg,.png,.gif">
+                <div class="form-text">Максимум 5MB. Разрешенные форматы: JPG, PNG, GIF</div>
             </div>
 
             <button type="submit" class="btn btn-primary">Опубликовать</button>

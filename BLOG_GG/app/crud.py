@@ -31,8 +31,13 @@ def authenticate_user(db: Session, email: str, password: str):
     return user
 
 
-def create_post(db: Session, post: schemas.PostCreate, user_id: int):
-    db_post = models.Post(**post.dict(), author_id=user_id)
+def create_post(db: Session, post: schemas.PostCreate, user_id: int, image_filename: str = None):
+    db_post = models.Post(
+        title=post.title,
+        content=post.content,
+        author_id=user_id,
+        image_filename=image_filename
+    )
     db.add(db_post)
     db.commit()
     db.refresh(db_post)

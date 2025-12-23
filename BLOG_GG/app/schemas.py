@@ -33,6 +33,7 @@ class Token(BaseModel):
 class PostBase(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     content: str = Field(min_length=1)
+    image_filename: Optional[str] = None
 
 
 class PostCreate(PostBase):

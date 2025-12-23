@@ -15,31 +15,37 @@
                     {% endif %}
                 </p>
                 <hr>
+
+                <!-- Блок для изображения -->
+                {% if post.image_filename %}
+                <div class="mb-4 text-center">
+                    <img src="/static/uploads/{{ post.image_filename }}"
+                         class="img-fluid rounded"
+                         alt="{{ post.title }}"
+                         style="max-height: 500px; object-fit: contain;">
+                    <p class="text-muted mt-2 small">Изображение к посту</p>
+                </div>
+                {% endif %}
+
                 <div class="post-content">
                     {{ post.content|safe }}
                 </div>
 
-                {% if request.cookies.get('access_token') %}
-                    {% set user_id = None %}
-                    {% if current_user %}
-                        {% set user_id = current_user.id %}
-                    {% endif %}
-
-                    {% if post.author_id == user_id %}
-                    <div class="mt-4">
-                        <div class="btn-group">
-                            <a href="/posts/{{ post.id }}/edit" class="btn btn-warning">
-                                <i class="bi bi-pencil"></i> Редактировать
-                            </a>
-                            <form method="post" action="/posts/{{ post.id }}/delete" class="d-inline">
-                                <button type="submit" class="btn btn-danger ms-2"
-                                        onclick="return confirm('Удалить пост?')">
-                                    <i class="bi bi-trash"></i> Удалить
-                                </button>
-                            </form>
-                        </div>
+                <!-- Блок кнопок управления -->
+                {% if current_user and post.author_id == current_user.id %}
+                <div class="mt-4">
+                    <div class="btn-group">
+                        <a href="/posts/{{ post.id }}/edit" class="btn btn-warning">
+                            <i class="bi bi-pencil"></i> Редактировать
+                        </a>
+                        <form method="post" action="/posts/{{ post.id }}/delete" class="d-inline">
+                            <button type="submit" class="btn btn-danger ms-2"
+                                    onclick="return confirm('Удалить пост?')">
+                                <i class="bi bi-trash"></i> Удалить
+                            </button>
+                        </form>
                     </div>
-                    {% endif %}
+                </div>
                 {% endif %}
             </div>
         </article>

@@ -1,5 +1,8 @@
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Request, Form
+import os
+import shutil
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request, Form, File, UploadFile
+from app.config import settings
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -80,11 +83,25 @@ async def create_post(
         request: Request,
         title: str = Form(...),
         content: str = Form(...),
+        image: UploadFile = File(None),
         db: Session = Depends(get_db),
         current_user: models.User = Depends(get_current_user)
 ):
+    image_filename = None
+
+    if image and image.filename:
+        os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+
+        import uuid
+        file_ext = os.path.splitext(image.filename)[1]
+        image_filename = f"{uuid.uuid4()}{file_ext}"
+        file_path = os.path.join(settings.UPLOAD_DIR, image_filename)
+
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(image.file, buffer)
+
     post_create = schemas.PostCreate(title=title, content=content)
-    crud.create_post(db, post_create, current_user.id)
+    crud.create_post(db, post_create, current_user.id, image_filename)
     return RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
 
 
