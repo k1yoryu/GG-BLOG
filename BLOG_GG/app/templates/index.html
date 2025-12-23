@@ -3,7 +3,6 @@
 {% block title %}Главная - GG Blog{% endblock %}
 
 {% block content %}
-<!-- ДОБАВЛЯЕМ МАКРОС ДЛЯ МОСКОВСКОГО ВРЕМЕНИ -->
 {% macro moscow_time(dt) %}
     {% if dt %}
         {% set hour = dt.hour + 3 %}

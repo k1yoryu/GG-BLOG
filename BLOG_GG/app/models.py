@@ -48,6 +48,7 @@ class Post(Base):
     author = relationship("User", back_populates="posts")
     tags = relationship("Tag", secondary=post_tags, back_populates="posts")
     comments = relationship("Comment", back_populates="post", cascade="all, delete-orphan")
+    reactions = relationship("Reaction", back_populates="post", cascade="all, delete-orphan")
 
 
 class Comment(Base):
@@ -58,8 +59,8 @@ class Comment(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
-    author_id = Column(Integer, ForeignKey("users.id"))
-    post_id = Column(Integer, ForeignKey("posts.id"))
+    author_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    post_id = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"))
 
     author = relationship("User")
     post = relationship("Post", back_populates="comments")
@@ -71,12 +72,12 @@ class Reaction(Base):
     id = Column(Integer, primary_key=True, index=True)
     post_id = Column(Integer, ForeignKey("posts.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    is_like = Column(Boolean, nullable=False)  # True = лайк, False = дизлайк
+    is_like = Column(Boolean, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (UniqueConstraint('post_id', 'user_id', name='uq_post_user_reaction'),)
 
-    post = relationship("Post")
+    post = relationship("Post", back_populates="reactions")
     user = relationship("User")
 
 reactions = relationship("Reaction", back_populates="post", cascade="all, delete-orphan")

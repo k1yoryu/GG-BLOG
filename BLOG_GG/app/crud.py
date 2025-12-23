@@ -101,6 +101,15 @@ def delete_post(db: Session, post_id: int, user_id: int):
     ).first()
 
     if db_post:
+
+        db.query(models.Reaction).filter(
+            models.Reaction.post_id == post_id
+        ).delete()
+
+        db.query(models.Comment).filter(
+            models.Comment.post_id == post_id
+        ).delete()
+
         db.delete(db_post)
         db.commit()
         return True

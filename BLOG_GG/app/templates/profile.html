@@ -5,11 +5,9 @@
 {% block content %}
 <div class="container mt-4">
     <div class="row">
-        <!-- Левая колонка - информация -->
         <div class="col-md-4">
             <div class="card">
                 <div class="card-body text-center">
-                    <!-- Простой аватар (инициалы) -->
                     <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center mx-auto mb-3"
                          style="width: 80px; height: 80px;">
                         <span class="text-white display-5">{{ profile_user.username[0]|upper }}</span>
@@ -31,7 +29,6 @@
                 </div>
             </div>
 
-            <!-- Статистика -->
             <div class="card mt-3">
                 <div class="card-body">
                     <h5 class="card-title">Статистика</h5>
@@ -65,9 +62,7 @@
             </div>
         </div>
 
-        <!-- Правая колонка - контент -->
         <div class="col-md-8">
-            <!-- Навигация -->
             <ul class="nav nav-tabs">
                 <li class="nav-item">
                     <a class="nav-link {% if tab == 'posts' %}active{% endif %}"
@@ -89,7 +84,6 @@
                 </li>
             </ul>
 
-            <!-- Контент -->
             <div class="mt-3">
                 {% if tab == 'posts' %}
                     {% if data %}
@@ -126,7 +120,6 @@
                                     <a href="/posts/{{ post.id }}" class="text-decoration-none">{{ post.title }}</a>
                                 </h6>
                                 <p class="card-text small text-muted">
-                                    <!-- ДОБАВИЛ ССЫЛКУ НА ПРОФИЛЬ АВТОРА -->
                                     Автор: <a href="/profile/{{ post.author.username }}" class="text-decoration-none">
                                         {{ post.author.username }}
                                     </a>
@@ -162,7 +155,6 @@
                 {% endif %}
             </div>
 
-            <!-- Пагинация -->
             {% if total_pages > 1 %}
             <nav class="mt-3">
                 <ul class="pagination justify-content-center pagination-sm">

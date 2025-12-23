@@ -38,13 +38,24 @@
 
                 <ul class="navbar-nav">
                     {% if current_user %}
-                    <!-- ДОБАВЬ ЭТОТ БЛОК С ССЫЛКОЙ НА ПРОФИЛЬ -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown"
                            role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-person-circle"></i> {{ current_user.username }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            {% set is_admin = current_user.email in ['test@gmail.com', 'email2@example.com']
+                               or current_user.username in ['test', 'admin_user'] %}
+
+                            {% if is_admin %}
+                            <li>
+                                <a class="dropdown-item text-warning" href="/admin">
+                                    <i class="bi bi-shield-check"></i> Админка
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            {% endif %}
+
                             <li>
                                 <a class="dropdown-item" href="/profile/{{ current_user.username }}">
                                     <i class="bi bi-person"></i> Мой профиль
@@ -63,7 +74,6 @@
                             </li>
                         </ul>
                     </li>
-                    <!-- КОНЕЦ БЛОКА -->
                     {% else %}
                     <li class="nav-item">
                         <a class="nav-link" href="/login">Вход</a>
