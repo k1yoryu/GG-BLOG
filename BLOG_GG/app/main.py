@@ -5,9 +5,10 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 import app.models as models
 from app.database import engine, get_db
-from app.routers import auth, posts
+from app.routers import auth, posts, comments
 from sqlalchemy.orm import Session
 import time
+from datetime import datetime, timedelta
 
 app = FastAPI(title="GG-BLOG")
 
@@ -25,8 +26,16 @@ def startup():
             if i < max_retries - 1:
                 time.sleep(3)
 
+
+def moscow_time(dt: datetime) -> datetime:
+    if dt:
+        return dt + timedelta(hours=3)
+    return dt
+
 app.include_router(auth.router)
 app.include_router(posts.router)
+app.include_router(comments.router)
+templates.env.filters["moscow_time"] = moscow_time
 
 def get_current_user_optional(request: Request, db: Session = Depends(get_db)):
     token = request.cookies.get("access_token")
