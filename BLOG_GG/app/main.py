@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 import app.models as models
 from app.database import engine, get_db
-from app.routers import auth, posts, comments, reactions
+from app.routers import auth, posts, comments, reactions, profile
 from sqlalchemy.orm import Session
 import time
 from datetime import datetime, timedelta
@@ -37,6 +37,7 @@ app.include_router(posts.router)
 app.include_router(comments.router)
 templates.env.filters["moscow_time"] = moscow_time
 app.include_router(reactions.router)
+app.include_router(profile.router)
 
 def get_current_user_optional(request: Request, db: Session = Depends(get_db)):
     token = request.cookies.get("access_token")

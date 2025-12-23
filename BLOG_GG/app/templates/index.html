@@ -28,7 +28,7 @@
                     <p class="card-text">{{ post.content[:200] }}{% if post.content|length > 200 %}...{% endif %}</p>
                     <p class="card-text">
                         <small class="text-muted">
-                            <!-- ИСПОЛЬЗУЕМ МАКРОС ВМЕСТО СТАРОГО КОДА -->
+                            Автор: <a href="/profile/{{ post.author.username }}" class="text-muted">{{ post.author.username }}</a> |
                             Опубликовано: {{ moscow_time(post.created_at) }}
                         </small>
                     </p>

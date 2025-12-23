@@ -38,14 +38,32 @@
 
                 <ul class="navbar-nav">
                     {% if current_user %}
-                    <li class="nav-item">
-                        <span class="nav-link text-light">
+                    <!-- ДОБАВЬ ЭТОТ БЛОК С ССЫЛКОЙ НА ПРОФИЛЬ -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown"
+                           role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-person-circle"></i> {{ current_user.username }}
-                        </span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            <li>
+                                <a class="dropdown-item" href="/profile/{{ current_user.username }}">
+                                    <i class="bi bi-person"></i> Мой профиль
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/change-password">
+                                    <i class="bi bi-key"></i> Сменить пароль
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="/logout">
+                                    <i class="bi bi-box-arrow-right"></i> Выйти
+                                </a>
+                            </li>
+                        </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/logout">Выйти</a>
-                    </li>
+                    <!-- КОНЕЦ БЛОКА -->
                     {% else %}
                     <li class="nav-item">
                         <a class="nav-link" href="/login">Вход</a>
