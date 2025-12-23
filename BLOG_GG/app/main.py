@@ -124,3 +124,49 @@ async def search(
 @app.get("/health")
 async def health_check():
     return {"status": "ok"}
+
+
+@app.get("/tag/{tag_name}", response_class=HTMLResponse)
+async def posts_by_tag(
+        tag_name: str,
+        request: Request,
+        page: int = Query(1, ge=1),
+        per_page: int = Query(10, ge=1, le=50),
+        db: Session = Depends(get_db),
+        current_user: Optional[models.User] = Depends(get_current_user_optional)
+):
+    try:
+        skip = (page - 1) * per_page
+
+        posts_list = db.query(models.Post) \
+            .join(models.Post.tags) \
+            .filter(models.Tag.name == tag_name) \
+            .order_by(models.Post.created_at.desc()) \
+            .offset(skip) \
+            .limit(per_page) \
+            .all()
+
+        total_posts = db.query(models.Post) \
+            .join(models.Post.tags) \
+            .filter(models.Tag.name == tag_name) \
+            .count()
+
+        total_pages = (total_posts + per_page - 1) // per_page
+    except:
+        posts_list = []
+        total_posts = 0
+        total_pages = 1
+
+    return templates.TemplateResponse(
+        "tag.html",
+        {
+            "request": request,
+            "tag_name": tag_name,
+            "posts": posts_list,
+            "total_posts": total_posts,
+            "page": page,
+            "total_pages": total_pages,
+            "per_page": per_page,
+            "current_user": current_user
+        }
+    )

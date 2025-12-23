@@ -83,10 +83,14 @@ async def create_post(
         request: Request,
         title: str = Form(...),
         content: str = Form(...),
+        tags: str = Form(""),
         image: UploadFile = File(None),
         db: Session = Depends(get_db),
         current_user: models.User = Depends(get_current_user)
 ):
+
+    tag_list = [tag.strip() for tag in tags.split(",") if tag.strip()]
+
     image_filename = None
 
     if image and image.filename:
@@ -100,7 +104,12 @@ async def create_post(
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(image.file, buffer)
 
-    post_create = schemas.PostCreate(title=title, content=content)
+    post_create = schemas.PostCreate(
+        title=title,
+        content=content,
+        tags=tag_list,
+        image_filename=image_filename
+    )
     crud.create_post(db, post_create, current_user.id, image_filename)
     return RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
 

@@ -14,9 +14,20 @@
                     <br>Обновлено: {{ post.updated_at.strftime('%d.%m.%Y %H:%M') }}
                     {% endif %}
                 </p>
+
+                <!-- Теги -->
+                {% if post.tags %}
+                <div class="mb-3">
+                    {% for tag in post.tags %}
+                    <a href="/tag/{{ tag.name }}" class="badge bg-primary text-decoration-none me-1">
+                        #{{ tag.name }}
+                    </a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
                 <hr>
 
-                <!-- Блок для изображения -->
                 {% if post.image_filename %}
                 <div class="mb-4 text-center">
                     <img src="/static/uploads/{{ post.image_filename }}"
@@ -31,7 +42,6 @@
                     {{ post.content|safe }}
                 </div>
 
-                <!-- Блок кнопок управления -->
                 {% if current_user and post.author_id == current_user.id %}
                 <div class="mt-4">
                     <div class="btn-group">

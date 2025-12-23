@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from app import models, schemas
 from app.auth import get_password_hash, verify_password
 
@@ -31,6 +32,16 @@ def authenticate_user(db: Session, email: str, password: str):
     return user
 
 
+def get_or_create_tag(db: Session, tag_name: str):
+    tag = db.query(models.Tag).filter(models.Tag.name == tag_name).first()
+    if not tag:
+        tag = models.Tag(name=tag_name)
+        db.add(tag)
+        db.commit()
+        db.refresh(tag)
+    return tag
+
+
 def create_post(db: Session, post: schemas.PostCreate, user_id: int, image_filename: str = None):
     db_post = models.Post(
         title=post.title,
@@ -38,6 +49,12 @@ def create_post(db: Session, post: schemas.PostCreate, user_id: int, image_filen
         author_id=user_id,
         image_filename=image_filename
     )
+
+    if hasattr(post, 'tags') and post.tags:
+        for tag_name in post.tags:
+            tag = get_or_create_tag(db, tag_name.strip())
+            db_post.tags.append(tag)
+
     db.add(db_post)
     db.commit()
     db.refresh(db_post)
@@ -59,9 +76,16 @@ def update_post(db: Session, post_id: int, post_update: schemas.PostUpdate, user
     ).first()
 
     if db_post:
-        update_data = post_update.dict(exclude_unset=True)
+        update_data = post_update.dict(exclude_unset=True, exclude={'tags'})
         for field, value in update_data.items():
             setattr(db_post, field, value)
+
+        if 'tags' in post_update.dict(exclude_unset=True):
+            db_post.tags.clear()
+            for tag_name in post_update.tags:
+                tag = get_or_create_tag(db, tag_name.strip())
+                db_post.tags.append(tag)
+
         db.commit()
         db.refresh(db_post)
 
@@ -81,17 +105,42 @@ def delete_post(db: Session, post_id: int, user_id: int):
 
     return False
 
+
 def search_posts(db: Session, search_query: str, skip: int = 0, limit: int = 10):
-    return db.query(models.Post)\
+    return db.query(models.Post) \
         .filter(models.Post.title.ilike(f"%{search_query}%") |
-                models.Post.content.ilike(f"%{search_query}%"))\
-        .order_by(models.Post.created_at.desc())\
-        .offset(skip)\
-        .limit(limit)\
+                models.Post.content.ilike(f"%{search_query}%")) \
+        .order_by(models.Post.created_at.desc()) \
+        .offset(skip) \
+        .limit(limit) \
         .all()
 
+
 def count_search_posts(db: Session, search_query: str):
-    return db.query(models.Post)\
+    return db.query(models.Post) \
         .filter(models.Post.title.ilike(f"%{search_query}%") |
-                models.Post.content.ilike(f"%{search_query}%"))\
+                models.Post.content.ilike(f"%{search_query}%")) \
         .count()
+
+
+def get_posts_by_tag(db: Session, tag_name: str, skip: int = 0, limit: int = 10):
+    return db.query(models.Post) \
+        .join(models.Post.tags) \
+        .filter(models.Tag.name == tag_name) \
+        .order_by(models.Post.created_at.desc()) \
+        .offset(skip) \
+        .limit(limit) \
+        .all()
+
+
+def get_all_tags(db: Session):
+    return db.query(models.Tag).order_by(models.Tag.name).all()
+
+
+def get_popular_tags(db: Session, limit: int = 10):
+    return db.query(models.Tag, func.count(models.post_tags.c.post_id).label('count')) \
+        .join(models.post_tags) \
+        .group_by(models.Tag.id) \
+        .order_by(func.count(models.post_tags.c.post_id).desc()) \
+        .limit(limit) \
+        .all()

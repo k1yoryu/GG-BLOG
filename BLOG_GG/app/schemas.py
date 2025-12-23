@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
 
@@ -30,10 +30,26 @@ class Token(BaseModel):
     token_type: str
 
 
+class TagBase(BaseModel):
+    name: str = Field(min_length=1, max_length=50)
+
+
+class TagCreate(TagBase):
+    pass
+
+
+class Tag(TagBase):
+    id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
 class PostBase(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     content: str = Field(min_length=1)
     image_filename: Optional[str] = None
+    tags: List[str] = []
 
 
 class PostCreate(PostBase):
@@ -43,12 +59,15 @@ class PostCreate(PostBase):
 class PostUpdate(BaseModel):
     title: Optional[str] = Field(None, min_length=1, max_length=200)
     content: Optional[str] = Field(None, min_length=1)
+    image_filename: Optional[str] = None
+    tags: Optional[List[str]] = []
 
 
 class PostOut(PostBase):
     id: int
     author_id: int
     created_at: datetime
+    tags: List[Tag] = []
 
     class Config:
         from_attributes = True
