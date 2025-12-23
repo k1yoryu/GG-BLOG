@@ -65,8 +65,13 @@ def delete_post_api(
 @router.get("/posts/create", response_class=HTMLResponse)
 async def create_post_page(
         request: Request,
-        current_user: models.User = Depends(get_current_user)
+        db: Session = Depends(get_db),
+        current_user: Optional[models.User] = Depends(get_current_user_optional)
 ):
+    if not current_user:
+        response = RedirectResponse(url=f"/login?next=/posts/create", status_code=status.HTTP_302_FOUND)
+        return response
+
     return templates.TemplateResponse("create_post.html", {"request": request})
 
 

@@ -53,12 +53,9 @@ async def register(
     response = RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
     return response
 
-
-
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
-
 
 
 @router.post("/login", response_class=HTMLResponse)
@@ -75,14 +72,14 @@ async def login(
             {"request": request, "error": "Неверный email или пароль", "email": email}
         )
 
-
     access_token = auth.create_access_token(
         data={"sub": user.username},
         expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     )
 
+    next_url = request.query_params.get("next", "/")
 
-    response = RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
+    response = RedirectResponse(url=next_url, status_code=status.HTTP_302_FOUND)
     response.set_cookie(
         key="access_token",
         value=f"Bearer {access_token}",
