@@ -1,5 +1,16 @@
 {% extends "base.html" %}
 
+<!-- ДОБАВЬ ЭТО СРАЗУ ПОСЛЕ extends -->
+{% macro moscow_time(dt) %}
+    {% if dt %}
+        {% set hour = dt.hour + 3 %}
+        {% if hour >= 24 %}
+            {% set hour = hour - 24 %}
+        {% endif %}
+        {{ dt.strftime('%d.%m.%Y ') }}{{ "%02d"|format(hour) }}:{{ dt.strftime('%M') }}
+    {% endif %}
+{% endmacro %}
+
 {% block title %}{{ post.title }} - GG Blog{% endblock %}
 
 {% block content %}
@@ -9,9 +20,10 @@
             <div class="card-body">
                 <h1 class="card-title">{{ post.title }}</h1>
                 <p class="text-muted">
-                    Опубликовано: {{ post.created_at.strftime('%d.%m.%Y %H:%M') }}
+                    Автор: {{ post.author.username }}
+                    | Опубликовано: {{ moscow_time(post.created_at) }}
                     {% if post.updated_at %}
-                    <br>Обновлено: {{ post.updated_at.strftime('%d.%m.%Y %H:%M') }}
+                    | Обновлено: {{ moscow_time(post.updated_at) }}
                     {% endif %}
                 </p>
 
@@ -59,6 +71,67 @@
                 {% endif %}
             </div>
         </article>
+
+        <!-- Секция комментариев -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5 class="card-title">Комментарии ({{ comments|length }})</h5>
+
+                <!-- Форма добавления комментария -->
+                {% if current_user %}
+                <form method="post" action="/posts/{{ post.id }}/comments/" class="mb-4">
+                    <div class="mb-3">
+                        <textarea name="content" class="form-control" rows="3"
+                                  placeholder="Напишите комментарий..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send"></i> Отправить комментарий
+                    </button>
+                </form>
+                {% else %}
+                <div class="alert alert-info">
+                    <a href="/login">Войдите</a>, чтобы оставить комментарий
+                </div>
+                {% endif %}
+
+                <hr>
+
+                <!-- Список комментариев -->
+                {% if comments %}
+                <div class="comments-list">
+                    {% for comment in comments %}
+                    <div class="comment mb-3 pb-3 {% if not loop.last %}border-bottom{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong class="d-block">{{ comment.author.username }}</strong>
+                                <small class="text-muted">
+                                    {{ moscow_time(comment.created_at) }}
+                                    {% if comment.updated_at and comment.updated_at != comment.created_at %}
+                                    (ред. {{ moscow_time(comment.updated_at) }})
+                                    {% endif %}
+                                </small>
+                            </div>
+
+                            {% if current_user and comment.author_id == current_user.id %}
+                            <form method="post"
+                                  action="/posts/{{ post.id }}/comments/{{ comment.id }}/delete"
+                                  class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                        onclick="return confirm('Удалить комментарий?')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                        <p class="mt-2 mb-0">{{ comment.content }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center">Пока нет комментариев. Будьте первым!</p>
+                {% endif %}
+            </div>
+        </div>
 
         <div class="mt-4">
             <a href="/" class="btn btn-secondary">

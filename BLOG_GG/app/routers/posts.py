@@ -125,9 +125,12 @@ async def read_post(
     if not post:
         raise HTTPException(status_code=404, detail="Пост не найден")
 
+    comments = crud.get_comments_by_post(db, post_id)
+
     return templates.TemplateResponse("post_detail.html", {
         "request": request,
         "post": post,
+        "comments": comments,
         "current_user": current_user
     })
 

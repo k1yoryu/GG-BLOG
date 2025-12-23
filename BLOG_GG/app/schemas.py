@@ -75,3 +75,34 @@ class PostOut(PostBase):
 
 class PostWithAuthor(PostOut):
     author: UserOut
+
+
+class CommentBase(BaseModel):
+    content: str = Field(min_length=1, max_length=2000)
+
+
+class CommentCreate(CommentBase):
+    pass
+
+
+class CommentUpdate(BaseModel):
+    content: str = Field(min_length=1, max_length=2000)
+
+
+class CommentOut(CommentBase):
+    id: int
+    author_id: int
+    post_id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class CommentWithAuthor(CommentOut):
+    author: UserOut
+
+
+class PostWithComments(PostWithAuthor):
+    comments: List[CommentWithAuthor] = []

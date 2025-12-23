@@ -47,3 +47,19 @@ class Post(Base):
 
     author = relationship("User", back_populates="posts")
     tags = relationship("Tag", secondary=post_tags, back_populates="posts")
+    comments = relationship("Comment", back_populates="post", cascade="all, delete-orphan")
+
+
+class Comment(Base):
+    __tablename__ = "comments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    content = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    author_id = Column(Integer, ForeignKey("users.id"))
+    post_id = Column(Integer, ForeignKey("posts.id"))
+
+    author = relationship("User")
+    post = relationship("Post", back_populates="comments")

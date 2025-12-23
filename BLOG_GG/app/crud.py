@@ -144,3 +144,61 @@ def get_popular_tags(db: Session, limit: int = 10):
         .order_by(func.count(models.post_tags.c.post_id).desc()) \
         .limit(limit) \
         .all()
+
+
+def create_comment(db: Session, comment: schemas.CommentCreate, author_id: int, post_id: int):
+    db_comment = models.Comment(
+        content=comment.content,
+        author_id=author_id,
+        post_id=post_id
+    )
+    db.add(db_comment)
+    db.commit()
+    db.refresh(db_comment)
+    return db_comment
+
+
+def get_comment(db: Session, comment_id: int):
+    return db.query(models.Comment).filter(models.Comment.id == comment_id).first()
+
+
+def get_comments_by_post(db: Session, post_id: int, skip: int = 0, limit: int = 100):
+    return (db.query(models.Comment)
+            .filter(models.Comment.post_id == post_id)
+            .order_by(models.Comment.created_at.desc())
+            .offset(skip)
+            .limit(limit)
+            .all())
+
+
+def update_comment(db: Session, comment_id: int, comment_update: schemas.CommentUpdate, author_id: int):
+    db_comment = db.query(models.Comment).filter(
+        models.Comment.id == comment_id,
+        models.Comment.author_id == author_id
+    ).first()
+
+    if db_comment:
+        for field, value in comment_update.dict(exclude_unset=True).items():
+            setattr(db_comment, field, value)
+        db.commit()
+        db.refresh(db_comment)
+
+    return db_comment
+
+
+def delete_comment(db: Session, comment_id: int, author_id: int):
+    db_comment = db.query(models.Comment).filter(
+        models.Comment.id == comment_id,
+        models.Comment.author_id == author_id
+    ).first()
+
+    if db_comment:
+        db.delete(db_comment)
+        db.commit()
+        return True
+
+    return False
+
+
+def get_comments_count_by_post(db: Session, post_id: int):
+    return db.query(models.Comment).filter(models.Comment.post_id == post_id).count()

@@ -3,6 +3,17 @@
 {% block title %}Главная - GG Blog{% endblock %}
 
 {% block content %}
+<!-- ДОБАВЛЯЕМ МАКРОС ДЛЯ МОСКОВСКОГО ВРЕМЕНИ -->
+{% macro moscow_time(dt) %}
+    {% if dt %}
+        {% set hour = dt.hour + 3 %}
+        {% if hour >= 24 %}
+            {% set hour = hour - 24 %}
+        {% endif %}
+        {{ dt.strftime('%d.%m.%Y ') }}{{ "%02d"|format(hour) }}:{{ dt.strftime('%M') }}
+    {% endif %}
+{% endmacro %}
+
 <div class="row">
     <div class="col-md-8">
         <h1 class="mb-4">Последние посты</h1>
@@ -17,7 +28,8 @@
                     <p class="card-text">{{ post.content[:200] }}{% if post.content|length > 200 %}...{% endif %}</p>
                     <p class="card-text">
                         <small class="text-muted">
-                            Опубликовано: {{ post.created_at.strftime('%d.%m.%Y %H:%M') }}
+                            <!-- ИСПОЛЬЗУЕМ МАКРОС ВМЕСТО СТАРОГО КОДА -->
+                            Опубликовано: {{ moscow_time(post.created_at) }}
                         </small>
                     </p>
                 </div>
