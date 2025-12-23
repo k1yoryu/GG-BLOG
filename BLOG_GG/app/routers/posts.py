@@ -126,11 +126,15 @@ async def read_post(
         raise HTTPException(status_code=404, detail="Пост не найден")
 
     comments = crud.get_comments_by_post(db, post_id)
+    reactions = crud.get_post_reactions(db, post_id)
+    user_reaction = crud.get_user_reaction(db, post_id, current_user.id) if current_user else None
 
     return templates.TemplateResponse("post_detail.html", {
         "request": request,
         "post": post,
         "comments": comments,
+        "reactions": reactions,
+        "user_reaction": user_reaction,
         "current_user": current_user
     })
 

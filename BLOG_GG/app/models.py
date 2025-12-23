@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, ForeignKey, Table
+from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, ForeignKey, Table, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
@@ -63,3 +63,20 @@ class Comment(Base):
 
     author = relationship("User")
     post = relationship("Post", back_populates="comments")
+
+
+class Reaction(Base):
+    __tablename__ = "reactions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    post_id = Column(Integer, ForeignKey("posts.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    is_like = Column(Boolean, nullable=False)  # True = лайк, False = дизлайк
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    __table_args__ = (UniqueConstraint('post_id', 'user_id', name='uq_post_user_reaction'),)
+
+    post = relationship("Post")
+    user = relationship("User")
+
+reactions = relationship("Reaction", back_populates="post", cascade="all, delete-orphan")

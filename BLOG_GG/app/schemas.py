@@ -106,3 +106,31 @@ class CommentWithAuthor(CommentOut):
 
 class PostWithComments(PostWithAuthor):
     comments: List[CommentWithAuthor] = []
+
+
+class ReactionBase(BaseModel):
+    is_like: bool
+
+
+class ReactionCreate(ReactionBase):
+    pass
+
+
+class ReactionOut(ReactionBase):
+    id: int
+    post_id: int
+    user_id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class PostReactions(BaseModel):
+    likes_count: int = 0
+    dislikes_count: int = 0
+    user_reaction: Optional[bool] = None
+
+
+class PostWithReactions(PostWithAuthor):
+    reactions: PostReactions

@@ -38,6 +38,55 @@
                 </div>
                 {% endif %}
 
+                <!-- БЛОК ЛАЙКОВ/ДИЗЛАЙКОВ -->
+                <div class="reactions mb-3">
+                    <div class="btn-group" role="group">
+                        {% if current_user %}
+                            <!-- Кнопка лайка -->
+                            <form method="post" action="/posts/{{ post.id }}/like" class="d-inline">
+                                <button type="submit"
+                                        class="btn btn-outline-success {% if user_reaction == True %}active{% endif %}"
+                                        title="Лайк">
+                                    <i class="bi bi-hand-thumbs-up"></i> 👍
+                                    <span class="badge bg-success">{{ reactions.likes_count if reactions else 0 }}</span>
+                                </button>
+                            </form>
+
+                            <!-- Кнопка дизлайка -->
+                            <form method="post" action="/posts/{{ post.id }}/dislike" class="d-inline">
+                                <button type="submit"
+                                        class="btn btn-outline-danger {% if user_reaction == False %}active{% endif %}"
+                                        title="Дизлайк">
+                                    <i class="bi bi-hand-thumbs-down"></i> 👎
+                                    <span class="badge bg-danger">{{ reactions.dislikes_count if reactions else 0 }}</span>
+                                </button>
+                            </form>
+
+                            <!-- Кнопка удаления реакции (если пользователь уже поставил реакцию) -->
+                            {% if user_reaction is not none %}
+                            <form method="post" action="/posts/{{ post.id }}/remove-reaction" class="d-inline">
+                                <button type="submit" class="btn btn-outline-secondary" title="Убрать реакцию">
+                                    <i class="bi bi-x-circle"></i> Убрать
+                                </button>
+                            </form>
+                            {% endif %}
+                        {% else %}
+                            <!-- Для неавторизованных пользователей показываем только счетчики -->
+                            <button type="button" class="btn btn-outline-secondary" disabled>
+                                <i class="bi bi-hand-thumbs-up"></i> 👍
+                                <span class="badge bg-secondary">{{ reactions.likes_count if reactions else 0 }}</span>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" disabled>
+                                <i class="bi bi-hand-thumbs-down"></i> 👎
+                                <span class="badge bg-secondary">{{ reactions.dislikes_count if reactions else 0 }}</span>
+                            </button>
+                            <small class="text-muted ms-2 align-self-center">
+                                <a href="/login">Войдите</a>, чтобы оценить пост
+                            </small>
+                        {% endif %}
+                    </div>
+                </div>
+
                 <hr>
 
                 {% if post.image_filename %}

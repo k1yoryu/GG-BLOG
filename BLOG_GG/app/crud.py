@@ -1,4 +1,6 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import Integer
+from typing import Optional
 from sqlalchemy import func
 from app import models, schemas
 from app.auth import get_password_hash, verify_password
@@ -202,3 +204,81 @@ def delete_comment(db: Session, comment_id: int, author_id: int):
 
 def get_comments_count_by_post(db: Session, post_id: int):
     return db.query(models.Comment).filter(models.Comment.post_id == post_id).count()
+
+def create_or_update_reaction(db: Session, reaction: schemas.ReactionCreate, post_id: int, user_id: int):
+    db_reaction = db.query(models.Reaction).filter(
+        models.Reaction.post_id == post_id,
+        models.Reaction.user_id == user_id
+    ).first()
+
+    if db_reaction:
+        if db_reaction.is_like == reaction.is_like:
+            db.delete(db_reaction)
+            db.commit()
+            return None
+        else:
+            db_reaction.is_like = reaction.is_like
+            db_reaction.created_at = func.now()
+    else:
+        db_reaction = models.Reaction(
+            post_id=post_id,
+            user_id=user_id,
+            is_like=reaction.is_like
+        )
+        db.add(db_reaction)
+
+    db.commit()
+    db.refresh(db_reaction)
+    return db_reaction
+
+
+def get_post_reactions(db: Session, post_id: int):
+    from sqlalchemy import func
+
+    result = db.query(
+        func.sum(models.Reaction.is_like.cast(Integer)).label('likes'),
+        func.sum((~models.Reaction.is_like).cast(Integer)).label('dislikes')
+    ).filter(models.Reaction.post_id == post_id).first()
+
+    return {
+        'likes_count': result.likes or 0,
+        'dislikes_count': result.dislikes or 0
+    }
+
+
+def get_user_reaction(db: Session, post_id: int, user_id: int):
+    reaction = db.query(models.Reaction).filter(
+        models.Reaction.post_id == post_id,
+        models.Reaction.user_id == user_id
+    ).first()
+
+    return reaction.is_like if reaction else None
+
+
+def get_post_with_reactions(db: Session, post_id: int, user_id: Optional[int] = None):
+    post = get_post(db, post_id)
+    if not post:
+        return None
+
+    reactions = get_post_reactions(db, post_id)
+    user_reaction = get_user_reaction(db, post_id, user_id) if user_id else None
+
+    return {
+        'post': post,
+        'reactions': reactions,
+        'user_reaction': user_reaction
+    }
+
+
+def delete_reaction(db: Session, post_id: int, user_id: int):
+    reaction = db.query(models.Reaction).filter(
+        models.Reaction.post_id == post_id,
+        models.Reaction.user_id == user_id
+    ).first()
+
+    if reaction:
+        db.delete(reaction)
+        db.commit()
+        return True
+
+    return False
